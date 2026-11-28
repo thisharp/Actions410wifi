@@ -26,3 +26,43 @@ patch -p1 --forward < "$GITHUB_WORKSPACE/scripts/msm89xx/patches/002-image-mk-re
 	echo "::error::002-image-mk-remove-graph-child-address.patch failed to apply: upstream image.mk has drifted; re-sync scripts/msm89xx/patches/002-image-mk-remove-graph-child-address.patch"
 	exit 1
 }
+
+
+
+# =========================================================
+# 清理旧配置并强制启用自定义插件
+# =========================================================
+cd "$GITHUB_WORKSPACE/openwrt" || exit 1
+
+PKGS=(
+  "luci-app-openclash"
+  "luci-app-passwall2"
+  "sing-box"
+  "xray-core"
+  "luci-app-netspeedtest"
+  "luci-app-poweroff"
+  "luci-app-lucky"
+  "luci-app-cpu-status"
+  "luci-proto-wireguard"
+  "wireguard-tools"
+  "kmod-wireguard"
+  "luci-app-openvpn"
+  "openvpn-openssl"
+  "luci-app-p910nd"
+  "p910nd"
+  "kmod-usb-printer"
+  "luci-i18n-passwall2-zh-cn"
+  "luci-i18n-netspeedtest-zh-cn"
+  "luci-i18n-poweroff-zh-cn"
+  "luci-i18n-lucky-zh-cn"
+  "luci-i18n-openvpn-zh-cn"
+  "luci-i18n-p910nd-zh-cn"
+)
+
+for pkg in "${PKGS[@]}"; do
+  sed -i "/CONFIG_PACKAGE_${pkg}[= ]/d" .config
+  echo "CONFIG_PACKAGE_${pkg}=y" >> .config
+done
+
+# 顺便去掉多余的 passwall1 残留选项避免干扰
+sed -i '/CONFIG_PACKAGE_luci-app-passwall_/d' .config
